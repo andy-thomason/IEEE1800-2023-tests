@@ -51,9 +51,15 @@ file is a self-checking module named `top` that starts with a metadata header:
 | `:should_fail_because:` | The tool must report an error; the reason why |
 | `:flags:` / `:flags-<profile>:` | Extra tool flags for this test |
 | `:timeout:` | Per-step timeout in seconds |
+| `:files:` | More source files, compiled after the test file in this order |
+| `:includes:` | Files reached only through `` `include `` (the test's directory is on the include path) |
 | `:description:` | Optional notes |
 
-Lines without a key continue the previous value. Write `*/` inside a quote as `*\/`.
+Support files sit next to the test with a `.svh` extension, so they are not run as
+tests themselves. Tests that need one compilation unit per file (§3.12.1 case b) pass
+`:flags-icarus: -u`; Verilator has no such mode.
+
+Lines without a key continue the previous value. Write `/*` and `*/` inside a quote as `/\*` and `*\/`.
 
 A simulation test passes when every step exits 0, the output contains a line that is
 exactly `PASS`, and no line contains `FAIL`. A `should_fail` test passes when the tool

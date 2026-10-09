@@ -1,18 +1,20 @@
 /*
 :section: 7.9.3 Exists()
 :summary: exists() reports 1 for an index holding an element and 0 otherwise.
+:description: Uses an int index so that only exists() is under test, not string keys.
 */
 module top;
-  int ages [string];
+  int scores [int];
+  int errors = 0;
   initial begin
-    ages["ada"] = 36;
-    if (ages.exists("ada") != 1) $display("FAIL: exists() missed a stored key");
-    else if (ages.exists("bob") != 0) $display("FAIL: exists() found a missing key");
-    else begin
-      ages.delete("ada");
-      if (ages.exists("ada") != 0) $display("FAIL: exists() found a deleted key");
-      else $display("PASS");
-    end
+    scores[42] = 7;
+    scores[-3] = 9;
+    if (scores.exists(42) != 1) begin $display("FAIL: exists(42) missed a stored key"); errors++; end
+    if (scores.exists(-3) != 1) begin $display("FAIL: exists(-3) missed a stored key"); errors++; end
+    if (scores.exists(43) != 0) begin $display("FAIL: exists(43) found a missing key"); errors++; end
+    scores.delete(42);
+    if (scores.exists(42) != 0) begin $display("FAIL: exists(42) found a deleted key"); errors++; end
+    if (errors == 0) $display("PASS");
     $finish;
   end
 endmodule

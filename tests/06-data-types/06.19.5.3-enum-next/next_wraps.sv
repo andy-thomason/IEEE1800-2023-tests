@@ -4,17 +4,22 @@
 */
 module top;
   typedef enum logic [1:0] { NORTH, EAST, SOUTH, WEST } heading_t;
-  heading_t h;
+  heading_t h, n;
+  int errors = 0;
+  task automatic check(input heading_t got, input heading_t want, input string what);
+    if (got != want) begin
+      $display("FAIL: %s gave %s, expected %s", what, got.name(), want.name());
+      errors++;
+    end
+  endtask
   initial begin
     h = EAST;
-    if (h.next() != SOUTH) $display("FAIL: EAST.next() gave %s", h.next().name());
-    else if (h.next(2) != WEST) $display("FAIL: EAST.next(2) gave %s", h.next(2).name());
-    else begin
-      h = WEST;
-      if (h.next() != NORTH) $display("FAIL: WEST.next() did not wrap, gave %s", h.next().name());
-      else if (h.next(3) != SOUTH) $display("FAIL: WEST.next(3) gave %s", h.next(3).name());
-      else $display("PASS");
-    end
+    n = h.next();  check(n, SOUTH, "EAST.next()");
+    n = h.next(2); check(n, WEST, "EAST.next(2)");
+    h = WEST;
+    n = h.next();  check(n, NORTH, "WEST.next() (wrap)");
+    n = h.next(3); check(n, SOUTH, "WEST.next(3) (wrap)");
+    if (errors == 0) $display("PASS");
     $finish;
   end
 endmodule

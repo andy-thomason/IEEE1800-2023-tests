@@ -74,10 +74,12 @@ pub struct Tool {
 }
 
 impl Tool {
-    /// The commands needed to run `test` from `src` using `work` as scratch space.
-    /// Pure, so it can also render portable commands for reproducers.
-    pub fn plan(&self, test: &TestCase, src: &Path, work: &Path) -> Vec<Step> {
-        let src = src.to_string_lossy().into_owned();
+    /// The commands needed to run `test` with its sources in `dir`, using `work`
+    /// as scratch space. Pure, so it can also render portable commands for
+    /// reproducers.
+    pub fn plan(&self, test: &TestCase, dir: &Path, work: &Path) -> Vec<Step> {
+        let srcs: Vec<String> = test.sources().iter().map(|s| path_str(&dir.join(s))).collect();
+        let inc_dir = if dir.as_os_str().is_empty() { ".".to_string() } else { path_str(dir) };
         let simulate = test.test_type == TestType::Simulation;
         let mut args: Vec<String> = Vec::new();
         let mut steps = Vec::new();
@@ -91,9 +93,10 @@ impl Tool {
                 }
                 // Lint warnings are not conformance failures.
                 args.extend(["-Wno-fatal".into(), "--top-module".into(), "top".into()]);
+                args.push(format!("-I{inc_dir}"));
                 args.extend(self.flags.iter().cloned());
                 args.extend(test.flags(self.profile.name()));
-                args.push(src);
+                args.extend(srcs);
                 steps.push(Step { program: self.exe.clone(), args });
                 if simulate {
                     steps.push(Step { program: path_str(&obj.join("Vtop")), args: vec![] });
@@ -103,9 +106,10 @@ impl Tool {
                 let vvp_file = path_str(&work.join("sim.vvp"));
                 args.extend(["-g2012", "-s", "top", "-o"].map(String::from));
                 args.push(vvp_file.clone());
+                args.push(format!("-I{inc_dir}"));
                 args.extend(self.flags.iter().cloned());
                 args.extend(test.flags(self.profile.name()));
-                args.push(src);
+                args.extend(srcs);
                 steps.push(Step { program: self.exe.clone(), args });
                 if simulate {
                     steps.push(Step { program: self.vvp(), args: vec!["-n".into(), vvp_file] });
@@ -114,7 +118,7 @@ impl Tool {
             Profile::Generic => {
                 args.extend(self.flags.iter().cloned());
                 args.extend(test.flags(self.profile.name()));
-                args.push(src);
+                args.extend(srcs);
                 steps.push(Step { program: self.exe.clone(), args });
             }
         }
@@ -234,7 +238,7 @@ pub fn run_test(tool: &Tool, test: &TestCase, work: &Path, timeout: Duration) ->
             work: work.to_path_buf(),
         };
     }
-    for step in tool.plan(test, &test.path, work) {
+    for step in tool.plan(test, test.dir(), work) {
         let r = run_step(&step, timeout);
         let ok = r.succeeded();
         steps.push(r);

@@ -14,7 +14,6 @@ pub fn repro_file_name(test: &TestCase) -> String {
 
 /// A reproducer that stands alone: the source, the commands and what went wrong.
 pub fn reproducer(tool: &Tool, version: &str, test: &TestCase, outcome: &Outcome) -> String {
-    let file_name = test.path.file_name().unwrap().to_string_lossy().into_owned();
     let mut md = String::new();
     let w = &mut md;
     let _ = writeln!(w, "# {}: {}\n", test.name, outcome.reason);
@@ -44,13 +43,23 @@ pub fn reproducer(tool: &Tool, version: &str, test: &TestCase, outcome: &Outcome
     }
 
     let _ = writeln!(w, "## Reproduce\n");
-    let _ = writeln!(w, "Save the source below as `{file_name}`, then run:\n");
+    let mut names = test.sources();
+    names.extend(test.includes.iter().cloned());
+    let listed = names.iter().map(|n| format!("`{n}`")).collect::<Vec<_>>().join(", ");
+    let _ = writeln!(w, "Save the source files below ({listed}) in one directory, then run there:\n");
     let _ = writeln!(w, "```sh\nmkdir -p work");
-    for step in tool.plan(test, Path::new(&file_name), Path::new("work")) {
+    for step in tool.plan(test, Path::new(""), Path::new("work")) {
         let _ = writeln!(w, "{}", step.shell());
     }
     let _ = writeln!(w, "```\n");
-    let _ = writeln!(w, "```systemverilog\n{}\n```\n", test.source.trim_end());
+    for name in &names {
+        let text = if *name == test.file_name() {
+            test.source.clone()
+        } else {
+            std::fs::read_to_string(test.dir().join(name)).unwrap_or_else(|e| format!("// cannot read: {e}"))
+        };
+        let _ = writeln!(w, "`{name}`:\n\n```systemverilog\n{}\n```\n", text.trim_end());
+    }
 
     let _ = writeln!(w, "## Observed\n");
     let _ = writeln!(w, "Work directory: `{}`\n", outcome.work.display());

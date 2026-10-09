@@ -12,10 +12,16 @@
 //! :flags: -DFOO              extra flags for every tool
 //! :flags-verilator: ...      extra flags for one tool profile only
 //! :timeout: 30               seconds, overrides --timeout
+//! :files: unit2.svh          more sources, compiled after this file in order
+//! :includes: defs.svh        files only reached through `include
 //! */
 //! ```
 //!
-//! A quote that itself contains a comment terminator writes it as `*\/`.
+//! Support files sit next to the test and use the `.svh` extension so they are
+//! not discovered as tests themselves.
+//!
+//! A quote that contains comment tokens writes them as `/\*` and `*\/`, so the
+//! header comment neither ends early nor looks nested.
 
 use std::collections::BTreeMap;
 use std::fmt;
@@ -54,12 +60,30 @@ pub struct TestCase {
     pub test_type: TestType,
     pub should_fail_because: Option<String>,
     pub timeout_secs: Option<u64>,
+    /// Extra sources compiled after the test file, relative to its directory.
+    pub files: Vec<String>,
+    /// Files reached only through `include, relative to the test's directory.
+    pub includes: Vec<String>,
     meta: BTreeMap<String, String>,
 }
 
 impl TestCase {
     pub fn should_fail(&self) -> bool {
         self.should_fail_because.is_some()
+    }
+
+    pub fn dir(&self) -> &Path {
+        self.path.parent().unwrap_or(Path::new("."))
+    }
+
+    pub fn file_name(&self) -> String {
+        self.path.file_name().unwrap().to_string_lossy().into_owned()
+    }
+
+    /// The test file followed by `:files:`, in compilation order, as names
+    /// relative to the test's directory.
+    pub fn sources(&self) -> Vec<String> {
+        std::iter::once(self.file_name()).chain(self.files.iter().cloned()).collect()
     }
 
     /// Flags from `:flags:` followed by `:flags-<profile>:`.
@@ -113,6 +137,8 @@ const KNOWN_KEYS: &[&str] = &[
     "should_fail_because",
     "flags",
     "timeout",
+    "files",
+    "includes",
 ];
 
 fn parse_header(source: &str) -> Result<BTreeMap<String, String>, String> {
@@ -147,7 +173,7 @@ fn parse_header(source: &str) -> Result<BTreeMap<String, String>, String> {
         }
     }
     for value in meta.values_mut() {
-        *value = value.replace("*\\/", "*/");
+        *value = value.replace("*\\/", "*/").replace("/\\*", "/*");
     }
     Ok(meta)
 }
@@ -178,6 +204,18 @@ pub fn load(tests_dir: &Path, path: &Path) -> Result<TestCase, String> {
         .remove("timeout")
         .map(|t| t.parse().map_err(|_| format!("bad :timeout: {t}")))
         .transpose()?;
+    let dir = path.parent().unwrap_or(Path::new("."));
+    let mut support = |key: &str| -> Result<Vec<String>, String> {
+        let names = split_flags(&meta.remove(key).unwrap_or_default());
+        for n in &names {
+            if !dir.join(n).is_file() {
+                return Err(format!(":{key}: names missing file {n}"));
+            }
+        }
+        Ok(names)
+    };
+    let files = support("files")?;
+    let includes = support("includes")?;
     Ok(TestCase {
         name,
         path: path.to_path_buf(),
@@ -187,6 +225,8 @@ pub fn load(tests_dir: &Path, path: &Path) -> Result<TestCase, String> {
         test_type,
         should_fail_because: meta.remove("should_fail_because"),
         timeout_secs,
+        files,
+        includes,
         meta,
         source,
     })
