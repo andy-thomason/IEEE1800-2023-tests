@@ -52,6 +52,7 @@ file is a self-checking module named `top` that starts with a metadata header:
 | `:flags:` / `:flags-<profile>:` | Extra tool flags for this test |
 | `:timeout:` | Per-step timeout in seconds |
 | `:files:` | More source files, compiled after the test file in this order |
+| `:expect:` | Output lines that must appear in this order (one per line; compared after trimming). Replaces the `PASS` check |
 | `:includes:` | Files reached only through `` `include `` (the test's directory is on the include path) |
 | `:description:` | Optional notes |
 

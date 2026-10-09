@@ -27,6 +27,10 @@ pub fn reproducer(tool: &Tool, version: &str, test: &TestCase, outcome: &Outcome
     let _ = writeln!(w, "| Section | IEEE 1800-2023 §{} |", test.section);
     let expected = match &test.should_fail_because {
         Some(why) => format!("tool reports an error ({why})"),
+        None if !test.expect.is_empty() => {
+            let lines: Vec<String> = test.expect.iter().map(|l| format!("`{l}`")).collect();
+            format!("all steps exit 0 and the output contains, in order: {}", lines.join(", "))
+        }
         None if test.test_type == crate::test_case::TestType::Simulation => {
             "all steps exit 0 and the simulation prints `PASS`".into()
         }

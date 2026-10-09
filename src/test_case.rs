@@ -14,6 +14,8 @@
 //! :timeout: 30               seconds, overrides --timeout
 //! :files: unit2.svh          more sources, compiled after this file in order
 //! :includes: defs.svh        files only reached through `include
+//! :expect: line one          output lines that must appear, in order
+//!          line two          (instead of PASS)
 //! */
 //! ```
 //!
@@ -64,6 +66,8 @@ pub struct TestCase {
     pub files: Vec<String>,
     /// Files reached only through `include, relative to the test's directory.
     pub includes: Vec<String>,
+    /// Output lines (trimmed) that must appear in this order; replaces the PASS check.
+    pub expect: Vec<String>,
     meta: BTreeMap<String, String>,
 }
 
@@ -139,6 +143,7 @@ const KNOWN_KEYS: &[&str] = &[
     "timeout",
     "files",
     "includes",
+    "expect",
 ];
 
 fn parse_header(source: &str) -> Result<BTreeMap<String, String>, String> {
@@ -216,6 +221,13 @@ pub fn load(tests_dir: &Path, path: &Path) -> Result<TestCase, String> {
     };
     let files = support("files")?;
     let includes = support("includes")?;
+    let expect: Vec<String> = meta
+        .remove("expect")
+        .map(|e| e.lines().map(|l| l.trim().to_string()).collect())
+        .unwrap_or_default();
+    if !expect.is_empty() && test_type != TestType::Simulation {
+        return Err(":expect: needs :type: simulation".into());
+    }
     Ok(TestCase {
         name,
         path: path.to_path_buf(),
@@ -227,6 +239,7 @@ pub fn load(tests_dir: &Path, path: &Path) -> Result<TestCase, String> {
         timeout_secs,
         files,
         includes,
+        expect,
         meta,
         source,
     })

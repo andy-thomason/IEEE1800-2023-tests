@@ -278,7 +278,14 @@ fn judge(test: &TestCase, steps: &[StepResult], timeout: Duration) -> (Status, S
         if let Some(line) = output.lines().find(|l| l.contains("FAIL")) {
             return (Status::Fail, format!("self-check failed: {}", line.trim()));
         }
-        if !output.lines().any(|l| l.trim() == "PASS") {
+        if !test.expect.is_empty() {
+            let mut lines = output.lines().map(str::trim);
+            for want in &test.expect {
+                if !lines.any(|l| l == want) {
+                    return (Status::Fail, format!("expected output line not found (in order): {want}"));
+                }
+            }
+        } else if !output.lines().any(|l| l.trim() == "PASS") {
             return (Status::Fail, "simulation finished without printing PASS".into());
         }
     }
