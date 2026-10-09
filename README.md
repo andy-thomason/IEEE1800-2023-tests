@@ -54,6 +54,7 @@ file is a self-checking module named `top` that starts with a metadata header:
 | `:timeout:` | Per-step timeout in seconds |
 | `:files:` | More source files, compiled after the test file in this order |
 | `:dpi:` | C sources implementing `import "DPI-C"` functions; compiled by Verilator and the generic profile (Icarus has no DPI-C) |
+| `:vpi:` | C sources of a VPI application; its `vlog_startup_routines` register the system tasks and functions the test calls. Icarus builds it with `iverilog-vpi` and loads it into `vvp`; Verilator gets `--vpi` and the sources |
 | `:plusargs:` | Arguments given to the simulation run step (e.g. `+VERBOSE +N=3`) |
 | `:data:` | Files copied into the work directory, which is the current directory while the tools run (e.g. `$readmemh` input) |
 | `:expect:` | Output lines that must appear in this order (one per line; compared after trimming). Replaces the `PASS` check |

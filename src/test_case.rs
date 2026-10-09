@@ -15,6 +15,8 @@
 //! :files: unit2.svh          more sources, compiled after this file in order
 //! :includes: defs.svh        files only reached through `include
 //! :dpi: helpers.c           C sources for DPI-C imports (passed to tools that support it)
+//! :vpi: probe.c              C sources for a VPI application whose vlog_startup_routines
+//!                            register system tasks/functions the test calls
 //! :plusargs: +A +N=3         arguments given to the simulation run (not the compile)
 //! :data: table.mem           files copied into the work directory, which is the
 //!                            current directory while the tools run
@@ -72,6 +74,8 @@ pub struct TestCase {
     pub includes: Vec<String>,
     /// C sources implementing DPI-C imports, relative to the test's directory.
     pub dpi: Vec<String>,
+    /// C sources of a VPI application, relative to the test's directory.
+    pub vpi: Vec<String>,
     /// Files copied into the work directory before the tools run.
     pub data: Vec<String>,
     /// Output lines (trimmed) that must appear in this order; replaces the PASS check.
@@ -158,6 +162,7 @@ const KNOWN_KEYS: &[&str] = &[
     "includes",
     "expect",
     "dpi",
+    "vpi",
     "data",
     "plusargs",
 ];
@@ -238,6 +243,7 @@ pub fn load(tests_dir: &Path, path: &Path) -> Result<TestCase, String> {
     let files = support("files")?;
     let includes = support("includes")?;
     let dpi = support("dpi")?;
+    let vpi = support("vpi")?;
     let data = support("data")?;
     let expect: Vec<String> = meta
         .remove("expect")
@@ -258,6 +264,7 @@ pub fn load(tests_dir: &Path, path: &Path) -> Result<TestCase, String> {
         files,
         includes,
         dpi,
+        vpi,
         data,
         expect,
         meta,

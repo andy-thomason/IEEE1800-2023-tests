@@ -50,6 +50,7 @@ pub fn reproducer(tool: &Tool, version: &str, test: &TestCase, outcome: &Outcome
     let mut names = test.sources();
     names.extend(test.includes.iter().cloned());
     names.extend(test.dpi.iter().cloned());
+    names.extend(test.vpi.iter().cloned());
     names.extend(test.data.iter().cloned());
     let listed = names.iter().map(|n| format!("`{n}`")).collect::<Vec<_>>().join(", ");
     let _ = writeln!(w, "Save the files below ({listed}) in one directory, then run there:\n");

@@ -101,6 +101,10 @@ impl Tool {
                 args.extend(srcs);
                 // Verilator compiles DPI-C sources given on its command line.
                 args.extend(test.dpi.iter().map(|c| path_str(&dir.join(c))));
+                if !test.vpi.is_empty() {
+                    args.push("--vpi".into());
+                    args.extend(test.vpi.iter().map(|c| path_str(&dir.join(c))));
+                }
                 steps.push(Step { program: self.exe.clone(), args, cwd: None });
                 if simulate {
                     steps.push(Step { program: path_str(&obj.join("Vtop")), args: test.plusargs(), cwd: None });
@@ -110,6 +114,13 @@ impl Tool {
                 // Icarus has no DPI-C support, so :dpi: sources are not passed;
                 // the import itself reports the gap.
                 let vvp_file = path_str(&work.join("sim.vvp"));
+                // A VPI application is built into ./test1800.vpi (the tools run in
+                // the work directory) and loaded with -M . -m test1800.
+                if !test.vpi.is_empty() {
+                    let mut vpi_args = vec![format!("--name={VPI_MODULE}")];
+                    vpi_args.extend(test.vpi.iter().map(|c| path_str(&dir.join(c))));
+                    steps.push(Step { program: self.sibling("iverilog-vpi"), args: vpi_args, cwd: None });
+                }
                 args.extend(["-g2012", "-s", "top", "-o"].map(String::from));
                 args.push(vvp_file.clone());
                 args.push(format!("-I{inc_dir}"));
@@ -118,11 +129,12 @@ impl Tool {
                 args.extend(srcs);
                 steps.push(Step { program: self.exe.clone(), args, cwd: None });
                 if simulate {
-                    steps.push(Step {
-                        program: self.vvp(),
-                        args: [vec!["-n".into(), vvp_file], test.plusargs()].concat(),
-                        cwd: None,
-                    });
+                    let mut run_args: Vec<String> = vec!["-n".into()];
+                    if !test.vpi.is_empty() {
+                        run_args.extend(["-M".into(), ".".into(), "-m".into(), VPI_MODULE.into()]);
+                    }
+                    run_args.push(vvp_file);
+                    steps.push(Step { program: self.sibling("vvp"), args: [run_args, test.plusargs()].concat(), cwd: None });
                 }
             }
             Profile::Generic => {
@@ -130,6 +142,7 @@ impl Tool {
                 args.extend(test.flags(self.profile.name()));
                 args.extend(srcs);
                 args.extend(test.dpi.iter().map(|c| path_str(&dir.join(c))));
+                args.extend(test.vpi.iter().map(|c| path_str(&dir.join(c))));
                 steps.push(Step { program: self.exe.clone(), args, cwd: None });
             }
         }
@@ -147,15 +160,19 @@ impl Tool {
         }
     }
 
-    /// `vvp` from the same directory as `iverilog` if present, else from PATH.
-    fn vvp(&self) -> String {
+    /// A companion program (`vvp`, `iverilog-vpi`) from the same directory as
+    /// the tool if present there, else from PATH.
+    fn sibling(&self, name: &str) -> String {
         let exe = Path::new(&self.exe);
         match exe.parent() {
-            Some(dir) if !dir.as_os_str().is_empty() && dir.join("vvp").exists() => path_str(&dir.join("vvp")),
-            _ => "vvp".into(),
+            Some(dir) if !dir.as_os_str().is_empty() && dir.join(name).exists() => path_str(&dir.join(name)),
+            _ => name.into(),
         }
     }
 }
+
+/// Name of the VPI module built for tests with `:vpi:` sources.
+const VPI_MODULE: &str = "test1800";
 
 fn path_str(p: &Path) -> String {
     p.to_string_lossy().into_owned()
