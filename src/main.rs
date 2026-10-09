@@ -175,7 +175,7 @@ fn tool_version(tool: &Tool) -> Result<String, String> {
         Profile::Icarus => "-V",
         _ => "--version",
     };
-    let step = runner::Step { program: tool.exe.clone(), args: vec![arg.into()] };
+    let step = runner::Step { program: tool.exe.clone(), args: vec![arg.into()], cwd: None };
     let r = runner::run_step(&step, Duration::from_secs(10));
     if let Some(e) = r.spawn_error {
         return Err(e);

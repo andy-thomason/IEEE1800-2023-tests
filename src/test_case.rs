@@ -15,6 +15,9 @@
 //! :files: unit2.svh          more sources, compiled after this file in order
 //! :includes: defs.svh        files only reached through `include
 //! :dpi: helpers.c           C sources for DPI-C imports (passed to tools that support it)
+//! :plusargs: +A +N=3         arguments given to the simulation run (not the compile)
+//! :data: table.mem           files copied into the work directory, which is the
+//!                            current directory while the tools run
 //! :expect: line one          output lines that must appear, in order
 //!          line two          (instead of PASS)
 //! */
@@ -69,6 +72,8 @@ pub struct TestCase {
     pub includes: Vec<String>,
     /// C sources implementing DPI-C imports, relative to the test's directory.
     pub dpi: Vec<String>,
+    /// Files copied into the work directory before the tools run.
+    pub data: Vec<String>,
     /// Output lines (trimmed) that must appear in this order; replaces the PASS check.
     pub expect: Vec<String>,
     meta: BTreeMap<String, String>,
@@ -77,6 +82,11 @@ pub struct TestCase {
 impl TestCase {
     pub fn should_fail(&self) -> bool {
         self.should_fail_because.is_some()
+    }
+
+    /// Arguments for the simulation run step, from `:plusargs:`.
+    pub fn plusargs(&self) -> Vec<String> {
+        split_flags(self.meta.get("plusargs").map_or("", |s| s))
     }
 
     pub fn dir(&self) -> &Path {
@@ -148,6 +158,8 @@ const KNOWN_KEYS: &[&str] = &[
     "includes",
     "expect",
     "dpi",
+    "data",
+    "plusargs",
 ];
 
 fn parse_header(source: &str) -> Result<BTreeMap<String, String>, String> {
@@ -226,6 +238,7 @@ pub fn load(tests_dir: &Path, path: &Path) -> Result<TestCase, String> {
     let files = support("files")?;
     let includes = support("includes")?;
     let dpi = support("dpi")?;
+    let data = support("data")?;
     let expect: Vec<String> = meta
         .remove("expect")
         .map(|e| e.lines().map(|l| l.trim().to_string()).collect())
@@ -245,6 +258,7 @@ pub fn load(tests_dir: &Path, path: &Path) -> Result<TestCase, String> {
         files,
         includes,
         dpi,
+        data,
         expect,
         meta,
         source,

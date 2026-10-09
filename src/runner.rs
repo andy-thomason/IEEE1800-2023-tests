@@ -45,6 +45,8 @@ impl Profile {
 pub struct Step {
     pub program: String,
     pub args: Vec<String>,
+    /// Working directory for the command, if not the current one.
+    pub cwd: Option<PathBuf>,
 }
 
 impl Step {
@@ -99,9 +101,9 @@ impl Tool {
                 args.extend(srcs);
                 // Verilator compiles DPI-C sources given on its command line.
                 args.extend(test.dpi.iter().map(|c| path_str(&dir.join(c))));
-                steps.push(Step { program: self.exe.clone(), args });
+                steps.push(Step { program: self.exe.clone(), args, cwd: None });
                 if simulate {
-                    steps.push(Step { program: path_str(&obj.join("Vtop")), args: vec![] });
+                    steps.push(Step { program: path_str(&obj.join("Vtop")), args: test.plusargs(), cwd: None });
                 }
             }
             Profile::Icarus => {
@@ -114,9 +116,13 @@ impl Tool {
                 args.extend(self.flags.iter().cloned());
                 args.extend(test.flags(self.profile.name()));
                 args.extend(srcs);
-                steps.push(Step { program: self.exe.clone(), args });
+                steps.push(Step { program: self.exe.clone(), args, cwd: None });
                 if simulate {
-                    steps.push(Step { program: self.vvp(), args: vec!["-n".into(), vvp_file] });
+                    steps.push(Step {
+                        program: self.vvp(),
+                        args: [vec!["-n".into(), vvp_file], test.plusargs()].concat(),
+                        cwd: None,
+                    });
                 }
             }
             Profile::Generic => {
@@ -124,10 +130,21 @@ impl Tool {
                 args.extend(test.flags(self.profile.name()));
                 args.extend(srcs);
                 args.extend(test.dpi.iter().map(|c| path_str(&dir.join(c))));
-                steps.push(Step { program: self.exe.clone(), args });
+                steps.push(Step { program: self.exe.clone(), args, cwd: None });
             }
         }
         steps
+    }
+
+    /// The executable as an absolute path if it names a file relative to the
+    /// current directory; bare names are left for PATH lookup.
+    fn exe_path(&self) -> String {
+        let p = Path::new(&self.exe);
+        if p.components().count() > 1 {
+            std::fs::canonicalize(p).map(|a| path_str(&a)).unwrap_or_else(|_| self.exe.clone())
+        } else {
+            self.exe.clone()
+        }
     }
 
     /// `vvp` from the same directory as `iverilog` if present, else from PATH.
@@ -178,7 +195,11 @@ pub fn run_step(step: &Step, timeout: Duration) -> StepResult {
         stderr: String::new(),
         duration: Duration::ZERO,
     };
-    let child = Command::new(&step.program)
+    let mut command = Command::new(&step.program);
+    if let Some(dir) = &step.cwd {
+        command.current_dir(dir);
+    }
+    let child = command
         .args(&step.args)
         .stdin(Stdio::null())
         .stdout(Stdio::piped())
@@ -243,7 +264,23 @@ pub fn run_test(tool: &Tool, test: &TestCase, work: &Path, timeout: Duration) ->
             work: work.to_path_buf(),
         };
     }
-    for step in tool.plan(test, test.dir(), work) {
+    // Tools run inside the work directory so files a test writes stay there;
+    // paths given to them must therefore be absolute.
+    let abs = |p: &Path| std::fs::canonicalize(p).unwrap_or_else(|_| p.to_path_buf());
+    let work_abs = abs(work);
+    for name in &test.data {
+        if let Err(e) = std::fs::copy(test.dir().join(name), work_abs.join(name)) {
+            return Outcome {
+                status: Status::Fail,
+                reason: format!("cannot copy data file {name}: {e}"),
+                steps,
+                work: work.to_path_buf(),
+            };
+        }
+    }
+    let tool_abs = Tool { exe: tool.exe_path(), profile: tool.profile, flags: tool.flags.clone() };
+    for mut step in tool_abs.plan(test, &abs(test.dir()), &work_abs) {
+        step.cwd = Some(work_abs.clone());
         let r = run_step(&step, timeout);
         let ok = r.succeeded();
         steps.push(r);

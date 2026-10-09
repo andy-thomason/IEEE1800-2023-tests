@@ -16,7 +16,8 @@ Output goes to `results/<profile>/` (override with `-o`):
 - `summary.md`: one row per test, linking to each failure.
 - `failures/<test>.md`: a self-contained reproducer with the quoted section of the
   standard, the test source, the commands to rerun it, and the tool's output.
-- `work/<test>/`: build products, kept only for failing tests (`--keep-work` keeps all).
+- `work/<test>/`: build products and any files the test writes, kept only for failing tests
+  (`--keep-work` keeps all). The tools run with this as their current directory.
 
 The exit status is 0 if everything passed, 1 if any test failed or was malformed, and 2
 for usage errors.
@@ -53,6 +54,8 @@ file is a self-checking module named `top` that starts with a metadata header:
 | `:timeout:` | Per-step timeout in seconds |
 | `:files:` | More source files, compiled after the test file in this order |
 | `:dpi:` | C sources implementing `import "DPI-C"` functions; compiled by Verilator and the generic profile (Icarus has no DPI-C) |
+| `:plusargs:` | Arguments given to the simulation run step (e.g. `+VERBOSE +N=3`) |
+| `:data:` | Files copied into the work directory, which is the current directory while the tools run (e.g. `$readmemh` input) |
 | `:expect:` | Output lines that must appear in this order (one per line; compared after trimming). Replaces the `PASS` check |
 | `:includes:` | Files reached only through `` `include `` (the test's directory is on the include path) |
 | `:description:` | Optional notes |

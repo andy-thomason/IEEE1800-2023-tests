@@ -50,8 +50,9 @@ pub fn reproducer(tool: &Tool, version: &str, test: &TestCase, outcome: &Outcome
     let mut names = test.sources();
     names.extend(test.includes.iter().cloned());
     names.extend(test.dpi.iter().cloned());
+    names.extend(test.data.iter().cloned());
     let listed = names.iter().map(|n| format!("`{n}`")).collect::<Vec<_>>().join(", ");
-    let _ = writeln!(w, "Save the source files below ({listed}) in one directory, then run there:\n");
+    let _ = writeln!(w, "Save the files below ({listed}) in one directory, then run there:\n");
     let _ = writeln!(w, "```sh\nmkdir -p work");
     for step in tool.plan(test, Path::new(""), Path::new("work")) {
         let _ = writeln!(w, "{}", step.shell());
@@ -63,7 +64,13 @@ pub fn reproducer(tool: &Tool, version: &str, test: &TestCase, outcome: &Outcome
         } else {
             std::fs::read_to_string(test.dir().join(name)).unwrap_or_else(|e| format!("// cannot read: {e}"))
         };
-        let lang = if name.ends_with(".c") || name.ends_with(".cpp") { "c" } else { "systemverilog" };
+        let lang = if name.ends_with(".c") || name.ends_with(".cpp") {
+            "c"
+        } else if name.ends_with(".sv") || name.ends_with(".svh") || name.ends_with(".v") {
+            "systemverilog"
+        } else {
+            "text"
+        };
         let _ = writeln!(w, "`{name}`:\n\n```{lang}\n{}\n```\n", text.trim_end());
     }
 
