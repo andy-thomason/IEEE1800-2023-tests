@@ -49,6 +49,7 @@ pub fn reproducer(tool: &Tool, version: &str, test: &TestCase, outcome: &Outcome
     let _ = writeln!(w, "## Reproduce\n");
     let mut names = test.sources();
     names.extend(test.includes.iter().cloned());
+    names.extend(test.dpi.iter().cloned());
     let listed = names.iter().map(|n| format!("`{n}`")).collect::<Vec<_>>().join(", ");
     let _ = writeln!(w, "Save the source files below ({listed}) in one directory, then run there:\n");
     let _ = writeln!(w, "```sh\nmkdir -p work");
@@ -62,7 +63,8 @@ pub fn reproducer(tool: &Tool, version: &str, test: &TestCase, outcome: &Outcome
         } else {
             std::fs::read_to_string(test.dir().join(name)).unwrap_or_else(|e| format!("// cannot read: {e}"))
         };
-        let _ = writeln!(w, "`{name}`:\n\n```systemverilog\n{}\n```\n", text.trim_end());
+        let lang = if name.ends_with(".c") || name.ends_with(".cpp") { "c" } else { "systemverilog" };
+        let _ = writeln!(w, "`{name}`:\n\n```{lang}\n{}\n```\n", text.trim_end());
     }
 
     let _ = writeln!(w, "## Observed\n");

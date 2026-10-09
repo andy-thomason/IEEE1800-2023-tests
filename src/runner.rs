@@ -97,12 +97,16 @@ impl Tool {
                 args.extend(self.flags.iter().cloned());
                 args.extend(test.flags(self.profile.name()));
                 args.extend(srcs);
+                // Verilator compiles DPI-C sources given on its command line.
+                args.extend(test.dpi.iter().map(|c| path_str(&dir.join(c))));
                 steps.push(Step { program: self.exe.clone(), args });
                 if simulate {
                     steps.push(Step { program: path_str(&obj.join("Vtop")), args: vec![] });
                 }
             }
             Profile::Icarus => {
+                // Icarus has no DPI-C support, so :dpi: sources are not passed;
+                // the import itself reports the gap.
                 let vvp_file = path_str(&work.join("sim.vvp"));
                 args.extend(["-g2012", "-s", "top", "-o"].map(String::from));
                 args.push(vvp_file.clone());
@@ -119,6 +123,7 @@ impl Tool {
                 args.extend(self.flags.iter().cloned());
                 args.extend(test.flags(self.profile.name()));
                 args.extend(srcs);
+                args.extend(test.dpi.iter().map(|c| path_str(&dir.join(c))));
                 steps.push(Step { program: self.exe.clone(), args });
             }
         }
