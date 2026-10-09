@@ -1,0 +1,12 @@
+[package]
+name = "IEEE1800-2023-tests"
+version = "0.1.0"
+edition = "2024"
+
+[[bin]]
+name = "test1800"
+path = "src/main.rs"
+
+[dependencies]
+clap = { version = "4", features = ["derive"] }
+wait-timeout = "0.2"
