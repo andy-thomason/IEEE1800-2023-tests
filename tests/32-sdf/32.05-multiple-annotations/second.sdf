@@ -1,0 +1,7 @@
+(DELAYFILE
+  (SDFVERSION "3.0")
+  (DESIGN "top")
+  (TIMESCALE 1ns)
+  (CELL (CELLTYPE "dut") (INSTANCE u)
+    (DELAY (INCREMENT (IOPATH a y (3)))))
+)

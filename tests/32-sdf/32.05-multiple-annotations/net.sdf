@@ -1,0 +1,7 @@
+(DELAYFILE
+  (SDFVERSION "3.0")
+  (DESIGN "top")
+  (TIMESCALE 1ns)
+  (CELL (CELLTYPE "top") (INSTANCE)
+    (DELAY (ABSOLUTE (INTERCONNECT src/o dst/i (5)))))
+)

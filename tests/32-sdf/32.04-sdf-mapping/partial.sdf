@@ -1,0 +1,8 @@
+(DELAYFILE
+  (SDFVERSION "3.0")
+  (DESIGN "top")
+  (TIMESCALE 1ns)
+  (CELL (CELLTYPE "dut2") (INSTANCE u)
+    (DELAY (ABSOLUTE (IOPATH a y (8))))
+    (TIMINGENV (PATHCONSTRAINT u/a u/y (1) (1))))
+)
