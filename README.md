@@ -14,8 +14,8 @@ cargo run --release -- --list
 Output goes to `results/<profile>/` (override with `-o`):
 
 - `summary.md`: one row per test, linking to each failure.
-- `failures/<test>.md`: a self-contained reproducer with the quoted section of the
-  standard, the test source, the commands to rerun it, and the tool's output.
+- `failures/<test>.md`: a self-contained reproducer with the section of the
+  standard and a summary of the requirement, the test source, the commands to rerun it, and the tool's output.
 - `work/<test>/`: build products and any files the test writes, kept only for failing tests
   (`--keep-work` keeps all). The tools run with this as their current directory.
 
@@ -38,7 +38,7 @@ file is a self-checking module named `top` that starts with a metadata header:
 ```systemverilog
 /*
 :section: 20.8.1 Integer math functions
-:quote: $clog2 of 0 returns 0.
+:summary: $clog2 of 0 returns 0.
 :type: simulation
 :flags-icarus: -DICARUS
 */
@@ -47,7 +47,7 @@ file is a self-checking module named `top` that starts with a metadata header:
 | Key | Meaning |
 |---|---|
 | `:section:` | Clause number and title (required) |
-| `:quote:` | The requirement being tested, quoted from the standard (required) |
+| `:summary:` | One short sentence paraphrasing the requirement under test, in our own words (required) |
 | `:type:` | `parse`, `elaboration` or `simulation` (default) |
 | `:should_fail_because:` | The tool must report an error; the reason why |
 | `:flags:` / `:flags-<profile>:` | Extra tool flags for this test |
@@ -65,12 +65,12 @@ Support files sit next to the test with a `.svh` extension, so they are not run 
 tests themselves. Tests that need one compilation unit per file (§3.12.1 case b) pass
 `:flags-icarus: -u`; Verilator has no such mode.
 
-Lines without a key continue the previous value. Write `/*` and `*/` inside a quote as `/\*` and `*\/`.
+Lines without a key continue the previous value. Write `/*` and `*/` inside a value as `/\*` and `*\/`.
 
 A simulation test passes when every step exits 0, the output contains a line that is
 exactly `PASS`, and no line contains `FAIL`. A `should_fail` test passes when the tool
 exits with a non-zero status. A crash or a timeout does not count.
 
-Test code is written from the standard's prose. **Do not copy examples from the
-standard**; quote the normative text in `:quote:` instead. The PDF is not in the
-repository (see `.gitignore`).
+Test code is written from the standard's prose. **Do not copy text or examples from
+the standard**: cite the clause in `:section:` and paraphrase the requirement in
+`:summary:`. The PDF is not in the repository (see `.gitignore`).

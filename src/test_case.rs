@@ -5,8 +5,9 @@
 //! ```text
 //! /*
 //! :section: 5.7.1 Integer literal constants
-//! :quote: An x digit in a hex literal makes four bits unknown.
-//!         (lines without a key continue the previous value)
+//! :summary: An x digit in a hex literal makes four bits unknown.
+//!            (lines without a key continue the previous value; a one-sentence
+//!            paraphrase in our own words, never text copied from the standard)
 //! :type: simulation          parse | elaboration | simulation (default)
 //! :should_fail_because: why the tool must reject this code
 //! :flags: -DFOO              extra flags for every tool
@@ -28,7 +29,7 @@
 //! Support files sit next to the test and use the `.svh` extension so they are
 //! not discovered as tests themselves.
 //!
-//! A quote that contains comment tokens writes them as `/\*` and `*\/`, so the
+//! A value that contains comment tokens writes them as `/\*` and `*\/`, so the
 //! header comment neither ends early nor looks nested.
 
 use std::collections::BTreeMap;
@@ -63,7 +64,8 @@ pub struct TestCase {
     pub path: PathBuf,
     pub source: String,
     pub section: String,
-    pub quote: String,
+    /// One-sentence paraphrase of the requirement under test.
+    pub summary: String,
     pub description: Option<String>,
     pub test_type: TestType,
     pub should_fail_because: Option<String>,
@@ -152,7 +154,7 @@ pub fn split_flags(s: &str) -> Vec<String> {
 const KNOWN_KEYS: &[&str] = &[
     "name",
     "section",
-    "quote",
+    "summary",
     "description",
     "type",
     "should_fail_because",
@@ -193,7 +195,7 @@ fn parse_header(source: &str) -> Result<BTreeMap<String, String>, String> {
             let key = current.as_ref().ok_or_else(|| format!("text outside any key: {trimmed}"))?;
             let value = meta.get_mut(key).unwrap();
             if !value.is_empty() {
-                value.push(if key == "quote" { ' ' } else { '\n' });
+                value.push(if key == "summary" { ' ' } else { '\n' });
             }
             value.push_str(trimmed);
         }
@@ -219,7 +221,7 @@ pub fn load(tests_dir: &Path, path: &Path) -> Result<TestCase, String> {
             .ok_or_else(|| format!("missing required metadata :{key}:"))
     };
     let section = required(&mut meta, "section")?;
-    let quote = required(&mut meta, "quote")?;
+    let summary = required(&mut meta, "summary")?;
     let test_type = match meta.remove("type").as_deref() {
         None | Some("simulation") => TestType::Simulation,
         Some("elaboration") => TestType::Elaboration,
@@ -256,7 +258,7 @@ pub fn load(tests_dir: &Path, path: &Path) -> Result<TestCase, String> {
         name,
         path: path.to_path_buf(),
         section,
-        quote,
+        summary,
         description: meta.remove("description"),
         test_type,
         should_fail_because: meta.remove("should_fail_because"),
@@ -296,9 +298,9 @@ mod tests {
 
     #[test]
     fn header_continuation_and_flags() {
-        let src = "/*\n:section: 1.2 Foo\n:quote: first line\n  second line\n:flags: -DA \"-DB=x y\"\n:flags-icarus: -DC\n*/\nmodule top; endmodule\n";
+        let src = "/*\n:section: 1.2 Foo\n:summary: first line\n  second line\n:flags: -DA \"-DB=x y\"\n:flags-icarus: -DC\n*/\nmodule top; endmodule\n";
         let meta = parse_header(src).unwrap();
-        assert_eq!(meta["quote"], "first line second line");
+        assert_eq!(meta["summary"], "first line second line");
         let dir = std::env::temp_dir().join("test1800-header-test");
         fs::create_dir_all(&dir).unwrap();
         let path = dir.join("t.sv");
@@ -311,12 +313,12 @@ mod tests {
     }
 
     #[test]
-    fn rejects_unknown_key_and_missing_quote() {
+    fn rejects_unknown_key_and_missing_summary() {
         assert!(parse_header("/*\n:sectoin: 1\n*/").is_err());
         let dir = std::env::temp_dir().join("test1800-header-test2");
         fs::create_dir_all(&dir).unwrap();
         let path = dir.join("t.sv");
         fs::write(&path, "/*\n:section: 1\n*/\n").unwrap();
-        assert!(load(&dir, &path).unwrap_err().contains(":quote:"));
+        assert!(load(&dir, &path).unwrap_err().contains(":summary:"));
     }
 }

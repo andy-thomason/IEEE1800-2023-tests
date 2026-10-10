@@ -40,8 +40,7 @@ pub fn reproducer(tool: &Tool, version: &str, test: &TestCase, outcome: &Outcome
     let _ = writeln!(w, "| Result | {} |\n", outcome.reason.replace('|', "\\|"));
 
     let _ = writeln!(w, "## Standard\n");
-    let _ = writeln!(w, "IEEE 1800-2023 §{}:\n", test.section);
-    let _ = writeln!(w, "> {}\n", test.quote);
+    let _ = writeln!(w, "IEEE 1800-2023 §{}: {}\n", test.section, test.summary);
     if let Some(d) = &test.description {
         let _ = writeln!(w, "{d}\n");
     }
