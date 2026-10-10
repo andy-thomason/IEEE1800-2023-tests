@@ -3,39 +3,18 @@
 Runs IEEE 1800-2023 (SystemVerilog) conformance tests against a simulator and
 writes a Markdown reproducer for every failure.
 
-```sh
-cargo run --release -- verilator                 # profile detected from the name
-cargo run --release -- /opt/iverilog/bin/iverilog -- -DSOME_DEFINE
-cargo run --release -- mytool -p generic -F "-x -y"
-cargo run --release -- verilator -k 5.7.1        # only tests whose name/section match
-cargo run --release -- --list
-```
-
-Output goes to `results/<profile>/` (override with `-o`):
-
-- `summary.md`: one row per test, linking to each failure.
-- `failures/<test>.md`: a self-contained reproducer with the section of the
-  standard and a summary of the requirement, the test source, the commands to rerun it, and the tool's output.
-- `work/<test>/`: build products and any files the test writes, kept only for failing tests
-  (`--keep-work` keeps all). The tools run with this as their current directory.
-
-The exit status is 0 if everything passed, 1 if any test failed or was malformed, and 2
-for usage errors.
-
-## Profiles
-
-| Profile | Steps |
-|---|---|
-| `verilator` | `verilator --binary -Wno-fatal --top-module top …`, then run `Vtop`; `--lint-only` for parse/elaboration tests |
-| `icarus` | `iverilog -g2012 -s top -o sim.vvp …`, then `vvp -n sim.vvp` |
-| `generic` | `<exe> <flags> test.sv`, judged on that single step |
-
 ## Results
 
-Results from running the full suite on the versions below (Verilator 66.8%, Icarus 68.6% passing).
+Latest run of all 1478 tests:
 
-- Verilator: `Verilator 5.053 devel rev vUNKNOWN-built20261009-bdfb2e8`
-- Icarus: `Icarus Verilog version 14.0 (devel) (467d830)`
+| Simulator | Version | Passed | Failed | Pass rate |
+|---|---|---:|---:|---:|
+| Verilator | 5.053 devel (`bdfb2e8`, built 2026-10-09) | 988 | 490 | 66.8% |
+| Icarus Verilog | 14.0 devel (`467d830`) | 1014 | 464 | 68.6% |
+
+Verilator is strongest on classes, clocking blocks and constrained random, and weakest on gate-level modelling, specify blocks, timing checks, SDF and VPI. Icarus is strongest on gate-level modelling, UDPs and generate constructs, and weakest on classes, constrained random, assertions, coverage and DPI.
+
+### By clause
 
 | Clause | Tests | Verilator pass | Verilator fail | Icarus pass | Icarus fail |
 |---|---:|---:|---:|---:|---:|
@@ -81,6 +60,35 @@ Results from running the full suite on the versions below (Verilator 66.8%, Icar
 | **Total** | **1478** | **988** | **490** | **1014** | **464** |
 
 A test fails when the tool rejects legal code, accepts illegal code, crashes, times out, or produces wrong results. Many failures are features the tool does not implement yet. Rerun with `cargo run --release -- verilator` or `-- iverilog` and see `results/<profile>/summary.md` for per-test details and reproducers.
+
+## Usage
+
+```sh
+cargo run --release -- verilator                 # profile detected from the name
+cargo run --release -- /opt/iverilog/bin/iverilog -- -DSOME_DEFINE
+cargo run --release -- mytool -p generic -F "-x -y"
+cargo run --release -- verilator -k 5.7.1        # only tests whose name/section match
+cargo run --release -- --list
+```
+
+Output goes to `results/<profile>/` (override with `-o`):
+
+- `summary.md`: one row per test, linking to each failure.
+- `failures/<test>.md`: a self-contained reproducer with the section of the
+  standard and a summary of the requirement, the test source, the commands to rerun it, and the tool's output.
+- `work/<test>/`: build products and any files the test writes, kept only for failing tests
+  (`--keep-work` keeps all). The tools run with this as their current directory.
+
+The exit status is 0 if everything passed, 1 if any test failed or was malformed, and 2
+for usage errors.
+
+## Profiles
+
+| Profile | Steps |
+|---|---|
+| `verilator` | `verilator --binary -Wno-fatal --top-module top …`, then run `Vtop`; `--lint-only` for parse/elaboration tests |
+| `icarus` | `iverilog -g2012 -s top -o sim.vvp …`, then `vvp -n sim.vvp` |
+| `generic` | `<exe> <flags> test.sv`, judged on that single step |
 
 ## Writing tests
 
