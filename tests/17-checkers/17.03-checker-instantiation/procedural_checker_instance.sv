@@ -8,6 +8,7 @@ checker stays_high (logic sig, event clock = $inferred_clock, output bit seen_lo
 endchecker
 
 module top;
+  timeunit 1ns; timeprecision 1ns;
   int errors = 0;
   task automatic check(input bit ok, input string what);
     if (!ok) begin
@@ -15,7 +16,6 @@ module top;
       errors++;
     end
   endtask
-  timeunit 1ns; timeprecision 1ns;
   logic clk = 0;
   always #5 clk = ~clk;
 

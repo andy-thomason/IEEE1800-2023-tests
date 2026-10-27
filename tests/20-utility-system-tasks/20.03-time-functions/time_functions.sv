@@ -4,6 +4,7 @@
   a 32-bit result.
 */
 module top;
+  timeunit 1ns; timeprecision 1ps;
   int errors = 0;
   task automatic check(input bit ok, input string what);
     if (!ok) begin
@@ -12,7 +13,6 @@ module top;
     end
   endtask
   function automatic bit near(real got, real want); return (got - want < 1.0e-9) && (want - got < 1.0e-9); endfunction
-    timeunit 1ns; timeprecision 1ps;
   initial begin
     #1.6;
     check($time == 2, $sformatf("$time = %0t, expected 2 (rounded)", $time));
