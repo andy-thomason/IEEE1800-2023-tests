@@ -14,7 +14,7 @@ module top;
   int result = 0;
   initial begin
     begin : outer_blk
-      int local_v = 4;
+      static int local_v = 4;
       fork : par_blk
         result = local_v * 2;
       join : par_blk

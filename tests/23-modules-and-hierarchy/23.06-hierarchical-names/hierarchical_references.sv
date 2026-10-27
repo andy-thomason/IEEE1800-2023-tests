@@ -17,7 +17,7 @@ module top;
     int doubled = g * 2;
   end
   initial begin : blk
-    int local_v = 9;
+    static int local_v = 9;
   end
   initial begin
     arr[2].value = 22;

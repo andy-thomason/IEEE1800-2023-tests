@@ -21,7 +21,7 @@ module top;
   initial begin : outer
     int inner_seen;
     begin : inner
-      int level = 3;
+      static int level = 3;
       inner_seen = level;
     end
     check(inner_seen == 3, $sformatf("innermost block saw level = %0d", inner_seen));
