@@ -23,7 +23,7 @@ module top;
     seen = value;
   endtask
   initial begin : named_block
-    int value = 4;
+    static int value = 4;
     int seen;
     shadow_in_task(seen);
     check(shadow_in_function() == 2, "function local did not shadow module variable");
@@ -31,7 +31,7 @@ module top;
     check(value == 4, "named block local did not shadow module variable");
     check(top.value == 1, "module variable was changed");
     begin
-      int value = 5;
+      static int value = 5;
       check(value == 5, "unnamed block local did not shadow outer block variable");
     end
     if (errors == 0) $display("PASS");

@@ -4,6 +4,7 @@
   clocking event.
 */
 module top;
+  timeunit 1ns; timeprecision 1ns;
   int errors = 0;
   task automatic check(input bit ok, input string what);
     if (!ok) begin
@@ -11,7 +12,6 @@ module top;
       errors++;
     end
   endtask
-  timeunit 1ns; timeprecision 1ns;
   logic clk = 0;
   always #5 clk = ~clk;
   logic [7:0] sig = 0;

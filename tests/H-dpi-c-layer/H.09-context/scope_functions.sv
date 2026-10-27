@@ -30,7 +30,7 @@ endmodule
 module cell_m;
   export "DPI-C" function report_id;
   function int report_id();
-    string n = $sformatf("%m");
+    automatic string n = $sformatf("%m");
     return n == "top.c1.report_id" ? 101 : 102;
   endfunction
 endmodule

@@ -13,9 +13,9 @@ module top;
   endtask
   string s;
   initial begin
-    s = "\101\60\7z";
+    s = "\101\60\7w";
     check(s.len() == 4, $sformatf("length %0d, expected 4", s.len()));
-    check(s[0] == 65 && s[1] == 48 && s[2] == 7 && s[3] == "z", "octal escapes of 3, 2 and 1 digits");
+    check(s[0] == 65 && s[1] == 48 && s[2] == 7 && s[3] == "w", "octal escapes of 3, 2 and 1 digits");
     if (errors == 0) $display("PASS");
     $finish;
   end

@@ -2,13 +2,13 @@
 :section: 29.3.5 z values in UDP
 :summary: A z driven onto a UDP input is handled exactly like an x when matching table rows.
 */
-primitive pick_x (y, a);
+primitive pick_x (y, a, s);
   output y;
-  input a;
+  input a, s;
   table
-    0 : 0;
-    1 : 0;
-    x : 1;
+    0 1 : 0;
+    1 1 : 0;
+    x 1 : 1;
   endtable
 endprimitive
 
@@ -22,7 +22,7 @@ endprimitive
   endtask
     logic a;
     wire y;
-    pick_x p(y, a);
+    pick_x p(y, a, 1'b1);
     initial begin
       a = 1'bz; #1;
       check(y === 1'b1, $sformatf("z input matched the x row: %b", y));

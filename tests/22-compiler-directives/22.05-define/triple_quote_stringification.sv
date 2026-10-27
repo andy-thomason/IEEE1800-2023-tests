@@ -4,7 +4,7 @@
   argument substitution.
 :description: `""" in macros is new in IEEE 1800-2023.
 */
-`define TQ(x) `"""a "x" b`"""
+`define TQ(x) `"""a `\`"x`\`" b`"""
 
 module top;
   int errors = 0;
