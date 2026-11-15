@@ -7,7 +7,7 @@ module watcher(input int v, output int seen);
 endmodule
 module dut;
   int value = 3;
-  int seen = -1;
+  int seen;
 endmodule
 module top;
   int errors = 0;
@@ -23,7 +23,7 @@ module top;
   initial begin
     #1;
     check(b.seen == 30, "bound instance drives b.seen");
-    check(a.seen == -1, "instance a was not in the list");
+    check(a.seen == 0, "instance a was not in the list");
     if (errors == 0) $display("PASS");
     $finish;
   end

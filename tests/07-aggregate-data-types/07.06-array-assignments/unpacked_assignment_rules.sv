@@ -28,7 +28,7 @@ module top;
     dyn = up;
     check(dyn.size() == 5 && dyn[0] == 10, "dynamic target resized");
     q = down[4:2];
-    check(q.size() == 3 && q[0] == 40, "queue target from a slice");
+    check(q.size() == 3 && q[0] == 20 && q[2] == 40, "queue target from a slice");
     joined = {parts[0:1], "mid", parts[2]};
     check(joined.size() == 4 && joined[2] == "mid" && joined[3] == "z", "unpacked concatenation into a dynamic array");
     vars_in = '{8'd1, 8'd2, 8'd3};

@@ -21,7 +21,7 @@ module top;
     else r = -1;
     check(r == 4, "if with matches and filters");
     o = tagged Nothing;
-    r = (o matches tagged Some .y) ? y : 99;
+    r = o matches (tagged Some .y) ? y : 99;
     check(r == 99, "conditional expression with matches");
     if (errors == 0) $display("PASS");
     $finish;

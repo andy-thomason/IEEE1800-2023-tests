@@ -24,7 +24,7 @@ module top;
     s = tagged Code 8'h21;
     check(s.Code == 8'h21, "void/byte tagged union");
     s = tagged Empty;
-    r = tagged Temp (tagged Celsius -16'sd4);
+    r = tagged Temp (tagged Celsius (-16'sd4));
     check(r.Temp.Celsius == -4, "nested tagged union");
     r = tagged Pos '{row: 6'd3, col: 6'd9};
     check(r.Pos.col == 9, "struct member of a tagged union");

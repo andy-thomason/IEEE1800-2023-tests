@@ -17,7 +17,7 @@ module top;
   sub child();
   initial begin
     $printtimescale;
-    $printtimescale(child);
+    $printtimescale(top.child);
     $printtimescale($root);
     $finish;
   end
