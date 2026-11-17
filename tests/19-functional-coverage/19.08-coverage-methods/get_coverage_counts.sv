@@ -14,6 +14,8 @@ module top;
   function automatic bit near(real got, real want); return got > want - 0.01 && got < want + 0.01; endfunction
     bit [2:0] v;
     covergroup cg;
+      type_option.merge_instances = 1;
+      option.get_inst_coverage = 1;
       cp: coverpoint v { bins b[] = {[0:4]}; }
     endgroup
     cg c1 = new, c2 = new;

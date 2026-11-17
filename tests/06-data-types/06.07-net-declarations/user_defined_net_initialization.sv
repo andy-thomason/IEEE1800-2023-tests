@@ -14,10 +14,10 @@ module top;
   typedef struct { int level = 5; real gain = 1.5; } sig_t;
   nettype sig_t sig_net;
   nettype logic [3:0] nibble_net;
-  int calls = 0;
+  // A resolution function may have no side effects (6.6.7), so it shows it
+  // ran at time zero (6.7.3) by its result alone.
   function automatic int count_resolve(input int drivers []);
-    calls++;
-    return drivers.size();
+    return 7 + drivers.size();
   endfunction
   nettype int counted_net with count_resolve;
   sig_net s;
@@ -27,8 +27,7 @@ module top;
     #1;
     check(s.level == 5 && s.gain == 1.5, "struct member initialisers were not applied");
     check(n === 4'bxxxx, $sformatf("undriven logic user-defined net = %b, expected x (not z)", n));
-    check(calls >= 1, "resolution function was not called at time zero");
-    check(c == 0, $sformatf("resolution of no drivers = %0d", c));
+    check(c == 7, $sformatf("resolution with no drivers was not run at time zero: c = %0d", c));
     if (errors == 0) $display("PASS");
     $finish;
   end

@@ -6,7 +6,7 @@
 interface multi_if;
   int hits;
   extern forkjoin task touch(input int id);
-  modport target(export touch);
+  modport target(ref hits, export touch);
 endinterface
 module target_m #(parameter int ID = 0) (multi_if.target t);
   task t.touch(input int id);

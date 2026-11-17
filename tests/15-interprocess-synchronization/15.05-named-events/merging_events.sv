@@ -17,11 +17,10 @@ module top;
   initial begin
     fork
       begin @e2 stale_woke = 1; end
-      begin #1 e2 = e1; end
-      begin #2 -> e2; end
-      #5;
-    join_any
-    disable fork;
+    join_none
+    #1 e2 = e1;
+    #1 -> e2;
+    #1 disable fork;
     check(!stale_woke, "a waiter blocked before the merge was woken");
     e3 = e1;
     fork

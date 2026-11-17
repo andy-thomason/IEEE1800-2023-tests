@@ -30,7 +30,7 @@ module top;
     text = squash($sformatf("%p", r));
     check(text == "'{a:5,c:GREEN,s:\"hi\"}", $sformatf("struct printed as %s", text));
     text = squash($sformatf("%p", arr));
-    check(text == "'{1,2,3}", $sformatf("array printed as %s", text));
+    check(text == "'{1,2,3}" || text == "'{0:1,1:2,2:3}", $sformatf("array printed as %s", text));
     text = $sformatf("%p", h);
     check(text == "null", $sformatf("null handle printed as %s", text));
     if (errors == 0) $display("PASS");

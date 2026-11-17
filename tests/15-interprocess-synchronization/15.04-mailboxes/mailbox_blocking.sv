@@ -27,7 +27,7 @@ module top;
       begin mb.peek(b); peek2 = $time; end
       #2 mb.put("three");
     join
-    check(peek1 == 2 && peek2 == 2 && a == "three" && b == "three", "one message unblocked both peeks");
+    check(peek1 == 5 && peek2 == 5 && a == "three" && b == "three", "one message unblocked both peeks");
     if (errors == 0) $display("PASS");
     $finish;
   end

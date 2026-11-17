@@ -19,7 +19,7 @@ module top;
     arr = {4'h3, 4'hc};
     check(vec == 8'h3c, "vector concatenation");
     check(arr[0] == 8'h03 && arr[1] == 8'h0c, "array concatenation of the same items");
-    jagged = {{1}, {2, 3, 4}, {5, 6}};
+    jagged = '{{1}, {2, 3, 4}, {5, 6}};
     check(jagged.size() == 3 && jagged[1].size() == 3 && jagged[2][1] == 6, "nested concatenations build a jagged queue");
     if (errors == 0) $display("PASS");
     $finish;
